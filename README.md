@@ -48,29 +48,29 @@ Create 3 users via the Directus admin panel (`/admin/users`) with role **Registe
 
 ```bash
 # Run all checks (pages + academy, all user types)
-python3 healthcheck_routes.py
+python3 healthcheck_routes_v2.py
 
 # Academy routes only
-python3 healthcheck_routes.py --academy-only
+python3 healthcheck_routes_v2.py --academy-only
 
 # Pages only
-python3 healthcheck_routes.py --pages-only
+python3 healthcheck_routes_v2.py --pages-only
 
 # Specific user type(s)
-python3 healthcheck_routes.py --academy-only --user-type free-trial
-python3 healthcheck_routes.py --academy-only --user-type unauthenticated --user-type auth-with-plan
+python3 healthcheck_routes_v2.py --academy-only --user-type free-trial
+python3 healthcheck_routes_v2.py --academy-only --user-type unauthenticated --user-type auth-with-plan
 
 # Specific route category(s)
-python3 healthcheck_routes.py --academy-only --category profile --category courses
+python3 healthcheck_routes_v2.py --academy-only --category profile --category courses
 
 # Custom .env file path
-python3 healthcheck_routes.py --env-file /path/to/.env
+python3 healthcheck_routes_v2.py --env-file /path/to/.env
 
 # Custom timeout (default: 10s)
-python3 healthcheck_routes.py --timeout 15
+python3 healthcheck_routes_v2.py --timeout 15
 
 # Custom URLs
-python3 healthcheck_routes.py --base-url https://staging.startstak.ai --directus-url https://directus-staging.startstak.ai
+python3 healthcheck_routes_v2.py --base-url https://staging.startstak.ai --directus-url https://directus-staging.startstak.ai
 ```
 
 ### Available options
