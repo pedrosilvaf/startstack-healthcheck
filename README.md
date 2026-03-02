@@ -1,4 +1,4 @@
-# StartStack Healthcheck - v2
+# StartStak Healthcheck - v2
 
 Comprehensive health check script for [startstak.ai](https://startstak.ai) that tests **page routes** and **academy routes** across multiple user types, with authentication via NextAuth and dynamic route fetching from Directus CMS.
 

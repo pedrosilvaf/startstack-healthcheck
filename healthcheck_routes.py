@@ -331,7 +331,7 @@ def collect_academy_routes(
 
 def check_route(url: str, opener) -> tuple[int | None, int | None, str | None]:
     req = urllib.request.Request(url, method="GET")
-    req.add_header("User-Agent", "StartStack-HealthCheck/2.0")
+    req.add_header("User-Agent", "StartStak-HealthCheck/2.0")
     try:
         start = time.time()
         with opener.open(req, timeout=TIMEOUT) as resp:
