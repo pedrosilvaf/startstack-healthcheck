@@ -1,4 +1,4 @@
-# StartStack Healthcheck - v1
+# StartStak Healthcheck - v1
 
 Simple health check script for **page routes** on [startstak.ai](https://startstak.ai), dynamically fetching slugs from Directus CMS.
 
