@@ -21,7 +21,7 @@ def fetch_slugs():
     print(raw, flush=True)
     data = json.loads(raw)
     slugs = [item["slug"] for item in data.get("data", []) if item.get("slug")]
-    print(f"\nEncontradas {len(slugs)} rotas. Iniciando health check...\n")
+    print(f"\nFound {len(slugs)} routes. Starting health check...\n")
     return slugs
 
 
@@ -78,13 +78,13 @@ def main():
 
     total = len(slugs)
     print("-" * 70)
-    print(f"\n{'=' * 30} RESUMO {'=' * 30}")
+    print(f"\n{'=' * 30} SUMMARY {'=' * 30}")
     print(f"Total:            {total}")
     print(f"OK (2xx):         {counts['ok']}")
     print(f"Redirect (3xx):   {counts['redirect']}")
-    print(f"Erro (4xx/5xx):   {counts['error']}")
+    print(f"Error (4xx/5xx):  {counts['error']}")
     print(f"Timeout:          {counts['timeout']}")
-    print(f"Erro de conexao:  {counts['conn_error']}")
+    print(f"Conn error:       {counts['conn_error']}")
     print("=" * 69)
 
     if counts["error"] or counts["timeout"] or counts["conn_error"]:
