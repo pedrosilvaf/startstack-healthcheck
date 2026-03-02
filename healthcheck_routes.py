@@ -332,16 +332,22 @@ def collect_academy_routes(
 def check_route(url: str, opener) -> tuple[int | None, int | None, str | None]:
     req = urllib.request.Request(url, method="GET")
     req.add_header("User-Agent", "StartStak-HealthCheck/2.0")
+    timeout_ms = int(TIMEOUT * 1000)
     try:
         start = time.time()
-        with opener.open(req, timeout=TIMEOUT) as resp:
+        with opener.open(req, timeout=TIMEOUT + 5) as resp:
             elapsed_ms = int((time.time() - start) * 1000)
+            if elapsed_ms > timeout_ms:
+                return resp.status, elapsed_ms, "SOFT_TIMEOUT"
             return resp.status, elapsed_ms, None
     except urllib.error.HTTPError as e:
         elapsed_ms = int((time.time() - start) * 1000)
+        if elapsed_ms > timeout_ms:
+            return e.code, elapsed_ms, "SOFT_TIMEOUT"
         return e.code, elapsed_ms, None
     except TimeoutError:
-        return None, None, "TIMEOUT"
+        elapsed_ms = int((time.time() - start) * 1000)
+        return None, elapsed_ms, "TIMEOUT"
     except Exception as e:
         return None, None, str(e)
 
@@ -379,7 +385,8 @@ def run_pages_check(base_url: str, directus_url: str) -> dict:
         if err:
             if "TIMEOUT" in err:
                 counts["timeout"] += 1
-                print(f"  [TIMEOUT] ---   >10s   {url}", flush=True)
+                ms_str = f"{ms}ms" if ms else ">timeout"
+                print(f"  [TIMEOUT] {status or '---'}   {ms_str:>7}  {url}", flush=True)
             else:
                 counts["error"] += 1
                 print(f"  [ERROR]   ---   ---    {url}  ({err})", flush=True)
@@ -429,7 +436,8 @@ def run_academy_check(
         if err:
             if "TIMEOUT" in err:
                 counts["timeout"] += 1
-                print(f"  [TIMEOUT] ---   >10s   {route.path}", flush=True)
+                ms_str = f"{ms}ms" if ms else ">timeout"
+                print(f"  [TIMEOUT] {status or '---'}   {ms_str:>7}  {route.path}", flush=True)
             else:
                 counts["error"] += 1
                 print(f"  [ERROR]   ---   ---    {route.path}  ({err})", flush=True)
@@ -508,9 +516,9 @@ def parse_args():
     )
     parser.add_argument(
         "--timeout",
-        type=int,
-        default=10,
-        help="Request timeout in seconds (default: 10)",
+        type=float,
+        default=TIMEOUT,
+        help=f"Request timeout in seconds (default: {TIMEOUT})",
     )
     parser.add_argument(
         "--base-url",
