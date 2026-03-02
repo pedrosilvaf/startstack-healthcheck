@@ -50,6 +50,7 @@ def load_dotenv(path: str | Path | None = None) -> None:
 DEFAULT_BASE_URL = "https://startstak.ai"
 DEFAULT_DIRECTUS_URL = "https://directus.startstak.ai"
 TIMEOUT = 10
+DIRECTUS_STATUS_FILTER = "filter[status][_eq]=published"
 
 # ── SSL Setup ────────────────────────────────────────────────────────
 
@@ -241,7 +242,7 @@ def normalize_path(slug: str, prefix: str = "") -> str:
 
 
 def fetch_page_routes(directus_url: str) -> list[RouteSpec]:
-    slugs = fetch_directus_items(directus_url, "pages?limit=-1&fields=slug")
+    slugs = fetch_directus_items(directus_url, f"pages?limit=-1&fields=slug&{DIRECTUS_STATUS_FILTER}")
     return [public_route(s, "pages") for s in slugs]
 
 
@@ -370,7 +371,7 @@ def evaluate_result(
 
 def run_pages_check(base_url: str, directus_url: str) -> dict:
     print(f"\n{'=' * 28} PAGES {'=' * 28}")
-    slugs = fetch_directus_items(directus_url, "pages?limit=-1&fields=slug")
+    slugs = fetch_directus_items(directus_url, f"pages?limit=-1&fields=slug&{DIRECTUS_STATUS_FILTER}")
     print(f"  Found {len(slugs)} page routes\n")
 
     opener = build_opener()
