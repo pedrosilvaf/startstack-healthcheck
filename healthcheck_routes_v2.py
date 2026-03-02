@@ -353,6 +353,28 @@ def check_route(url: str, opener) -> tuple[int | None, int | None, str | None]:
         return None, None, str(e)
 
 
+def check_final_destination(url: str) -> tuple[int | None, int | None, str | None, str | None]:
+    """Follow redirects and return (final_status, elapsed_ms, error, final_url)."""
+    follow_opener = urllib.request.build_opener(
+        urllib.request.HTTPSHandler(context=SSL_CTX),
+    )
+    req = urllib.request.Request(url, method="GET")
+    req.add_header("User-Agent", "StartStak-HealthCheck/2.0")
+    try:
+        start = time.time()
+        with follow_opener.open(req, timeout=TIMEOUT + 5) as resp:
+            elapsed_ms = int((time.time() - start) * 1000)
+            return resp.status, elapsed_ms, None, resp.url
+    except urllib.error.HTTPError as e:
+        elapsed_ms = int((time.time() - start) * 1000)
+        return e.code, elapsed_ms, None, None
+    except TimeoutError:
+        elapsed_ms = int((time.time() - start) * 1000)
+        return None, elapsed_ms, "TIMEOUT", None
+    except Exception as e:
+        return None, None, str(e), None
+
+
 def evaluate_result(
     status: int | None, error: str | None, expected: ExpectedResult
 ) -> bool:
@@ -395,8 +417,15 @@ def run_pages_check(base_url: str, directus_url: str) -> dict:
             counts["pass"] += 1
             print(f"  [OK]      {status}   {ms:>5}ms  {url}", flush=True)
         elif 300 <= status < 400:
-            counts["fail"] += 1
-            print(f"  [WARN]    {status}   {ms:>5}ms  {url}", flush=True)
+            # Follow redirect and check final destination
+            final_status, final_ms, final_err, final_url = check_final_destination(url)
+            if not final_err and final_status and 200 <= final_status < 300:
+                counts["pass"] += 1
+                print(f"  [REDIR]   {status}→{final_status}   {ms:>5}ms  {url} → {final_url}", flush=True)
+            else:
+                counts["fail"] += 1
+                dest = f" → {final_url}" if final_url else ""
+                print(f"  [FAIL]    {status}→{final_status or '---'}   {ms:>5}ms  {url}{dest}", flush=True)
         else:
             counts["fail"] += 1
             print(f"  [FAIL]    {status}   {ms:>5}ms  {url}", flush=True)
@@ -433,6 +462,24 @@ def run_academy_check(
         counts["total"] += 1
 
         passed = evaluate_result(status, err, expected)
+
+        # If redirect received but expected OK, follow redirect to check destination
+        if not err and not passed and expected == ExpectedResult.OK and status and 300 <= status < 400:
+            url = f"{base_url}{route.path}"
+            final_status, final_ms, final_err, final_url = check_final_destination(url)
+            if not final_err and final_status and 200 <= final_status < 300:
+                counts["pass"] += 1
+                print(f"  [REDIR]   {status}→{final_status}   {ms:>5}ms  {route.path} → {final_url}", flush=True)
+                continue
+            else:
+                counts["fail"] += 1
+                dest = f" → {final_url}" if final_url else ""
+                print(
+                    f"  [FAIL]    {status}→{final_status or '---'}   {ms:>5}ms  {route.path}{dest}"
+                    f"  (expected: {expected.value})",
+                    flush=True,
+                )
+                continue
 
         if err:
             if "TIMEOUT" in err:
